@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: pg-ecommerce-compose
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      # Correct volume path to prevent crash issues
+      - postgres_data:/var/lib/postgresql/data
+
+  productservice:
+    container_name: productservice
+    build:
+      context: ./ProductService
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      - postgres
+    restart: on-failure
+
+  authservice:
+    container_name: authservice
+    build:
+      context: ./AuthService
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      - postgres
+    restart: on-failure
+
+  gateway:
+    container_name: gateway
+    build:
+      context: ./Gateway
+      dockerfile: Dockerfile
+    ports:
+      - "7000:8080" # The only backend port exposed to the outside
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      - productservice
+      - authservice
+    restart: on-failure
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./FrontEnd
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80" # The UI port exposed to the outside
+    depends_on:
+      - gateway
+
+volumes:
+  postgres_data:
