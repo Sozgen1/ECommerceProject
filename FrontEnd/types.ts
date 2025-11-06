@@ -1,10 +1,11 @@
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
-  imageUrl: string;
-  stock: number;
+  stockQuantity: number;
+  imageUrl?: string; // Optional, will use placeholder if not provided
+  stock?: number;    // Alias for stockQuantity
 }
 
 export interface User {
@@ -19,4 +20,8 @@ export interface AuthContextType {
   login: (token: string, user: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
+}
+
+export interface CartItem extends Product {
+  quantity: number;
 }
